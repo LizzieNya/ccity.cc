@@ -1,5 +1,5 @@
 {
-  "name": "ccity.cc",
+  "name": "ccitydotcc",
   "main": "worker.js",
   "compatibility_date": "2025-11-10",
   "workers_dev": true,
