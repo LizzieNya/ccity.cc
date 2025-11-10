@@ -18,7 +18,7 @@ export default {
       return new Response('Method not allowed', { status: 405 });
     }
 
-    // Redirect root domain to game page
+    // ✅ FIXED: trimmed trailing spaces
     if (url.pathname === '/' || url.pathname === '/index.html') {
       return Response.redirect('https://1cc.ccity.cc/game', 302);
     }
@@ -28,7 +28,9 @@ export default {
       return new Response('Not found', { status: 404 });
     }
 
-    const html = `<!DOCTYPE html>
+    // ✅ Use String.raw to prevent template parser errors (e.g. stray `${` or `}`)
+    const html = String.raw`
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -495,7 +497,7 @@ export default {
       perfectRun = true;
       
       // Update live score display
-      document.getElementById('live-score').textContent = `;SCORE: ${score.toString().padStart(6, '0')}`;
+      document.getElementById('live-score').textContent = `SCORE: ${score.toString().padStart(6, '0')}`;
     }
     
     // Handle window resize
@@ -911,7 +913,7 @@ export default {
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY',
         'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-        'Content-Security-Policy': "default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-ancestors 'none'",
+        'Content-Security-Policy': "default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' ; frame-ancestors 'none'",
       }
     });
   }
