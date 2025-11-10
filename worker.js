@@ -495,7 +495,7 @@ export default {
       perfectRun = true;
       
       // Update live score display
-      document.getElementById('live-score').textContent = `SCORE: ${score.toString().padStart(6, '0')}`;
+      document.getElementById('live-score').textContent = `;SCORE: ${score.toString().padStart(6, '0')}`;
     }
     
     // Handle window resize
