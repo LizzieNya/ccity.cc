@@ -20,8 +20,8 @@ export default {
 //      return Response.redirect('https://ccity.cc', 302);
     }
 
-    if (url.pathname !== '/game') {
-      return new Response('Not found', { status: 404 });
+//    if (url.pathname !== '/game') {
+//      return new Response('Not found', { status: 404 });
     }
 
     // ✅ String.raw + no inner backticks → build-safe
