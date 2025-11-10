@@ -17,7 +17,7 @@ export default {
     }
 
     if (url.pathname === '/' || url.pathname === '/index.html') {
-      return Response.redirect('https://1cc.ccity.cc/game', 302);
+      return Response.redirect('https://ccity.cc', 302);
     }
 
     if (url.pathname !== '/game') {
@@ -35,7 +35,7 @@ export default {
   <meta name="description" content="Bullet-hell shooter inspired by Touhou Project. One-credit clear challenge!">
   <meta property="og:title" content="1cc - Touhou Legacy">
   <meta property="og:description" content="Can you survive with just one credit?">
-  <meta property="og:url" content="https://1cc.ccity.cc">
+  <meta property="og:url" content="https://ccity.cc">
   <meta property="og:type" content="game">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
   <style>
@@ -53,7 +53,7 @@ export default {
 </head>
 <body>
   <div class="header">
-    <div class="logo">1cc.ccity.cc</div>
+    <div class="logo">ccity.cc</div>
     <div class="score-display" id="live-score">SCORE: 000000</div>
   </div>
   <div class="game-container" id="sketch-container"></div>
