@@ -16,8 +16,8 @@ export default {
       return new Response('Method not allowed', { status: 405 });
     }
 
-    if (url.pathname === '/' || url.pathname === '/index.html') {
-      return Response.redirect('https://ccity.cc', 302);
+//    if (url.pathname === '/' || url.pathname === '/index.html') {
+//      return Response.redirect('https://ccity.cc', 302);
     }
 
     if (url.pathname !== '/game') {
