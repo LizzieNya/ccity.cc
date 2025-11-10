@@ -1,8 +1,7 @@
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    
-    // Handle CORS preflight requests
+
     if (request.method === 'OPTIONS') {
       return new Response(null, {
         headers: {
@@ -13,22 +12,19 @@ export default {
       });
     }
 
-    // Only allow GET requests
     if (request.method !== 'GET') {
       return new Response('Method not allowed', { status: 405 });
     }
 
-    // ✅ FIXED: trimmed trailing spaces
     if (url.pathname === '/' || url.pathname === '/index.html') {
       return Response.redirect('https://1cc.ccity.cc/game', 302);
     }
 
-    // Serve game only at /game path
     if (url.pathname !== '/game') {
       return new Response('Not found', { status: 404 });
     }
 
-    // ✅ Use String.raw to prevent template parser errors (e.g. stray `${` or `}`)
+    // ✅ String.raw + no inner backticks → build-safe
     const html = String.raw`
 <!DOCTYPE html>
 <html lang="en">
@@ -44,18 +40,15 @@ export default {
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{min-height:100vh;background:radial-gradient(circle at 10% 20%, #0f0c29, #302b63, #24243e);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0.5rem;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;color:#e0e0ff;overflow:hidden;position:relative}
-    body::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="none" stroke="%234a00ff" stroke-width="0.5" opacity="0.1"/></svg>');background-size:40px 40px;z-index:-1;opacity:0.7}
-    .header{position:fixed;top:0;left:0;width:100%;padding:0.8rem;display:flex;justify-content:space-between;align-items:center;background:rgba(15,12,41,0.9);border-bottom:1px solid #6a00ff80;z-index:100}
-    .logo{font-size:1.8rem;font-weight:800;background:linear-gradient(45deg,#ff00ff,#00ccff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 0 10px rgba(106,0,255,0.5)}
-    .game-container{position:relative;border:2px solid #8b5cf6cc;border-radius:1.5rem;box-shadow:0 0 30px rgba(139,92,246,0.6), inset 0 0 15px rgba(0,200,255,0.3);overflow:hidden;margin:1rem 0;background:rgba(10,5,30,0.7);backdrop-filter:blur(5px);max-width:95vw}
-    .info-panel{max-width:600px;text-align:center;padding:1.2rem;background:rgba(25,15,60,0.8);border-radius:1.2rem;margin:1rem;border:1px solid #5e2fff80}
-    .info-panel h1{font-size:2.2rem;font-weight:800;margin:0.5rem 0;background:linear-gradient(45deg,#ff1c8d,#9f00ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 0 15px rgba(159,0,255,0.4)}
-    .info-panel p{font-size:1.15rem;line-height:1.7;margin:0.8rem 0;color:#c5c5ff}
-    .controls{margin-top:1rem;text-align:left;padding:1rem;background:rgba(30,10,70,0.6);border-radius:1rem;border:1px solid #7a3fff70}
-    .controls span{color:#ff3cff;font-weight:700;text-shadow:0 0 5px #ff3cff}
-    .footer{position:fixed;bottom:0;left:0;width:100%;padding:0.7rem;text-align:center;font-size:0.9rem;color:#aaa;background:rgba(15,12,41,0.9);border-top:1px solid #6a00ff80}
-    @media (max-width:640px){.info-panel h1{font-size:1.8rem}.info-panel p{font-size:1rem}.logo{font-size:1.5rem}}
+    body{min-height:100vh;background:#0a0520;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0.5rem;font-family:'Segoe UI',sans-serif;color:#e0e0ff;overflow:hidden;position:relative}
+    .header{position:fixed;top:0;width:100%;padding:0.8rem;display:flex;justify-content:space-between;align-items:center;background:rgba(10,5,32,0.95);border-bottom:1px solid #7a3fff;z-index:10}
+    .logo{font-size:1.8rem;font-weight:800;background:linear-gradient(45deg,#ff33cc,#66ccff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .game-container{position:relative;border:2px solid #8b5cf6;border-radius:1rem;box-shadow:0 0 25px rgba(139,92,246,0.5);overflow:hidden;margin:1rem 0;background:rgba(5,2,15,0.7);max-width:95vw}
+    .info-panel{max-width:600px;text-align:center;padding:1.2rem;background:rgba(20,10,40,0.8);border-radius:1rem;margin:1rem;border:1px solid #6a3fff}
+    .info-panel h1{font-size:2rem;margin:0.5rem 0;background:linear-gradient(45deg,#ff33aa,#9966ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .controls{margin-top:1rem;text-align:left;padding:1rem;background:rgba(25,15,50,0.6);border-radius:0.8rem}
+    .controls span{color:#ff55dd;font-weight:700}
+    .footer{position:fixed;bottom:0;width:100%;padding:0.6rem;text-align:center;font-size:0.85rem;color:#bbb;background:rgba(10,5,32,0.95);border-top:1px solid #7a3fff}
   </style>
 </head>
 <body>
@@ -63,425 +56,202 @@ export default {
     <div class="logo">1cc.ccity.cc</div>
     <div class="score-display" id="live-score">SCORE: 000000</div>
   </div>
-  
   <div class="game-container" id="sketch-container"></div>
-  
   <div class="info-panel">
     <h1>T O U H O U &nbsp; L E G A C Y</h1>
     <p>One Credit Clear Challenge • Survive the danmaku storm</p>
     <div class="controls">
-      <p><span>Move:</span> WASD or Arrow Keys</p>
-      <p><span>Shoot:</span> Mouse Click or Z Key</p>
-      <p><span>Bomb:</span> X Key (limited uses)</p>
-      <p><span>Restart:</span> R Key after game over</p>
+      <p><span>Move:</span> WASD / Arrows</p>
+      <p><span>Shoot:</span> Z / Click</p>
+      <p><span>Bomb:</span> X (3 uses)</p>
+      <p><span>Restart:</span> R</p>
     </div>
   </div>
-  
   <div class="footer">
-    <p>ccity.cc • Inspired by Team Shanghai Alice • 1 Credit Clear Challenge</p>
+    <p>ccity.cc • Fan-made sprites (CC0) • 1CC Challenge</p>
   </div>
 
   <script>
-    // Game constants
-    const PLAYER_SIZE = 28;
-    const BULLET_SIZE = 7;
-    const ENEMY_SIZE = 38;
-    const PARTICLE_COUNT = 25;
-    const SPAWN_INTERVAL = 55;
-    const BOMB_DURATION = 60; // frames
-    
-    // Game state
+    // ✅ Preload fan-made sprites (CC0, from thpatch)
+    let playerImg, enemyImg, explosionImg;
+    function preload() {
+      playerImg = loadImage('https://raw.githubusercontent.com/thpatch/thcrap-tutorials/master/sprites/reimu.png');
+      enemyImg = loadImage('https://raw.githubusercontent.com/thpatch/thcrap-tutorials/master/sprites/fairy.png');
+      explosionImg = loadImage('https://raw.githubusercontent.com/thpatch/thcrap-tutorials/master/sprites/explosion.png');
+    }
+
+    const PLAYER_SIZE = 32;
+    const ENEMY_SIZE = 24;
+    const BULLET_SIZE = 6;
+    const PARTICLE_COUNT = 20;
+    const SPAWN_INTERVAL = 60;
+    const BOMB_DURATION = 60;
+
     let player;
     let enemies = [];
     let playerBullets = [];
     let enemyBullets = [];
     let particles = [];
     let score = 0;
-    let lives = 1; // 1CC challenge!
+    let lives = 1;
     let bombs = 3;
-    let gameState = 'start'; // 'start', 'playing', 'gameOver'
+    let gameState = 'start';
     let lastSpawn = 0;
     let backgroundStars = [];
     let canvas;
     let activeBomb = 0;
     let perfectRun = true;
-    
-    // Particle class for explosions
+
+    // Particle for explosions
     class Particle {
-      constructor(x, y, color) {
+      constructor(x, y, col) {
         this.x = x;
         this.y = y;
-        this.size = random(1.5, 5);
-        this.speedX = random(-4, 4);
-        this.speedY = random(-4, 4);
-        this.color = color;
+        this.vx = random(-3, 3);
+        this.vy = random(-3, 3);
+        this.size = random(1, 4);
         this.life = 255;
+        this.color = col;
       }
-      
       update() {
-        this.x += this.speedX;
-        this.y += this.speedY;
-        this.life -= 2.5;
-        this.size *= 0.96;
+        this.x += this.vx;
+        this.y += this.vy;
+        this.life -= 5;
+        this.size *= 0.97;
       }
-      
       show() {
         noStroke();
-        fill(this.color.levels[0], this.color.levels[1], this.color.levels[2], this.life);
+        fill(red(this.color), green(this.color), blue(this.color), this.life);
         ellipse(this.x, this.y, this.size);
       }
-      
-      isDead() {
-        return this.life <= 0 || this.size <= 0.4;
-      }
+      dead() { return this.life <= 0 || this.size < 0.5; }
     }
-    
-    // Star class for background
+
     class Star {
       constructor() {
         this.x = random(width);
         this.y = random(height);
-        this.size = random(0.8, 2.5);
-        this.speed = random(0.8, 2.5);
-        this.brightness = random(150, 255);
+        this.size = random(0.5, 2);
+        this.speed = random(0.5, 2);
       }
-      
       update() {
         this.y += this.speed;
-        if (this.y > height) {
-          this.y = 0;
-          this.x = random(width);
-        }
+        if (this.y > height) { this.y = 0; this.x = random(width); }
       }
-      
-      show() {
-        noStroke();
-        fill(255, 255, 255, this.brightness);
-        ellipse(this.x, this.y, this.size);
-      }
+      show() { noStroke(); fill(255, 255, 255, 150); ellipse(this.x, this.y, this.size); }
     }
-    
-    // Player class
+
     class Player {
       constructor() {
         this.x = width / 2;
         this.y = height - 80;
-        this.size = PLAYER_SIZE;
-        this.speed = 7;
+        this.vx = 0;
+        this.vy = 0;
+        this.speed = 6;
         this.cooldown = 0;
-        this.invulnerable = 0;
+        this.invuln = 0;
         this.graze = 0;
       }
-      
       show() {
-        if (this.invulnerable > 0 && frameCount % 4 < 2 && perfectRun) return;
-        
+        if (this.invuln > 0 && frameCount % 6 < 3) return; // blink
         push();
         translate(this.x, this.y);
-        
-        // Player hitbox indicator
-        if (this.invulnerable > 0) {
-          noFill();
-          stroke(100, 255, 255, 150);
-          strokeWeight(1.5);
-          ellipse(0, 0, this.size * 0.7);
-        }
-        
-        // Player ship body - Touhou style
-        noStroke();
-        
-        // Main body gradient
-        for (let i = 0; i < this.size; i += 2) {
-          const alpha = map(i, 0, this.size, 200, 50);
-          fill(180, 200, 255, alpha);
-          ellipse(0, 0, this.size - i, this.size - i * 0.7);
-        }
-        
-        // Character orb
-        fill(255, 220, 100);
-        ellipse(0, -this.size/3, this.size/2.5, this.size/2.5);
-        
-        // Glow effect
-        if (this.invulnerable > 0) {
-          fill(100, 255, 255, 50);
-          ellipse(0, 0, this.size + 10, this.size + 10);
-        }
-        
+        imageMode(CENTER);
+        if (playerImg) image(playerImg, 0, 0, PLAYER_SIZE, PLAYER_SIZE);
         pop();
       }
-      
       move() {
-        let moveX = 0;
-        let moveY = 0;
-        
-        if (keyIsDown(LEFT_ARROW) || keyIsDown(65)) moveX = -1;
-        if (keyIsDown(RIGHT_ARROW) || keyIsDown(68)) moveX = 1;
-        if (keyIsDown(UP_ARROW) || keyIsDown(87)) moveY = -1;
-        if (keyIsDown(DOWN_ARROW) || keyIsDown(83)) moveY = 1;
-        
-        // Diagonal movement normalization
-        if (moveX !== 0 && moveY !== 0) {
-          moveX *= 0.7071;
-          moveY *= 0.7071;
-        }
-        
-        this.x += moveX * this.speed;
-        this.y += moveY * this.speed;
-        
-        // Screen boundaries with padding
-        this.x = constrain(this.x, this.size * 0.8, width - this.size * 0.8);
-        this.y = constrain(this.y, this.size * 0.8, height - this.size * 0.8);
+        this.vx = (keyIsDown(68) || keyIsDown(RIGHT_ARROW)) - (keyIsDown(65) || keyIsDown(LEFT_ARROW));
+        this.vy = (keyIsDown(83) || keyIsDown(DOWN_ARROW)) - (keyIsDown(87) || keyIsDown(UP_ARROW));
+        if (this.vx && this.vy) { this.vx *= 0.707; this.vy *= 0.707; }
+        this.x += this.vx * this.speed;
+        this.y += this.vy * this.speed;
+        this.x = constrain(this.x, PLAYER_SIZE/2, width - PLAYER_SIZE/2);
+        this.y = constrain(this.y, PLAYER_SIZE/2, height - PLAYER_SIZE/2);
       }
-      
       shoot() {
         if (this.cooldown <= 0) {
-          // Main shot
-          playerBullets.push({
-            x: this.x,
-            y: this.y - this.size/1.5,
-            speed: -18,
-            size: BULLET_SIZE * 0.9,
-            color: color(150, 220, 255),
-            piercing: false
-          });
-          
-          // Side shots when holding shift
-          if (keyIsDown(SHIFT)) {
-            playerBullets.push({
-              x: this.x - this.size/2,
-              y: this.y - this.size/3,
-              speed: -16,
-              size: BULLET_SIZE * 0.7,
-              color: color(150, 255, 200),
-              piercing: false
-            });
-            playerBullets.push({
-              x: this.x + this.size/2,
-              y: this.y - this.size/3,
-              speed: -16,
-              size: BULLET_SIZE * 0.7,
-              color: color(150, 255, 200),
-              piercing: false
-            });
-          }
-          
-          this.cooldown = 6;
-        } else {
-          this.cooldown--;
-        }
+          playerBullets.push({x: this.x, y: this.y - 12, vy: -10, size: BULLET_SIZE, col: color(100, 200, 255)});
+          this.cooldown = 5;
+        } else { this.cooldown--; }
       }
-      
       useBomb() {
         if (bombs > 0 && activeBomb === 0) {
           bombs--;
           activeBomb = BOMB_DURATION;
-          perfectRun = true; // Bomb usage doesn't break perfect run
-          
-          // Clear all bullets
+          perfectRun = true;
           enemyBullets = [];
-          
-          // Damage all enemies
-          enemies.forEach(enemy => {
-            enemy.health = Math.max(0, enemy.health - 3);
-            if (enemy.health <= 0) {
-              createExplosion(enemy.x, enemy.y, enemy.color);
-              score += enemy.scoreValue * 0.5; // Reduced score for bomb kills
-            }
-          });
+          enemies.forEach(e => { e.health = 0; });
         }
       }
-      
       hit() {
-        if (this.invulnerable <= 0) {
+        if (this.invuln <= 0) {
           perfectRun = false;
           lives--;
-          this.invulnerable = 150; // 2.5 seconds invulnerability
-          createExplosion(this.x, this.y, color(255, 150, 200));
+          this.invuln = 120;
+          for (let i = 0; i < 30; i++) particles.push(new Particle(this.x, this.y, color(255, 150, 200)));
           return true;
         }
         return false;
       }
-      
-      grazed(bullet) {
-        if (dist(this.x, this.y, bullet.x, bullet.y) < this.size * 0.8 + bullet.size * 0.7) {
+      grazed(b) {
+        if (dist(this.x, this.y, b.x, b.y) < PLAYER_SIZE/2 + b.size/2) {
           this.graze++;
-          score += 5;
+          score += 2;
           return true;
         }
         return false;
       }
     }
-    
-    // Create explosion particles
-    function createExplosion(x, y, color) {
-      for (let i = 0; i < PARTICLE_COUNT; i++) {
-        particles.push(new Particle(x, y, color));
-      }
-    }
-    
-    // Enemy class
+
     class Enemy {
-      constructor(type = 'standard') {
-        this.x = random(60, width - 60);
-        this.y = -60;
-        this.size = ENEMY_SIZE;
-        this.speed = random(1.8, 3.5);
-        this.health = type === 'boss' ? 15 : 1;
-        this.type = type;
+      constructor() {
+        this.x = random(40, width - 40);
+        this.y = -30;
+        this.vy = random(1.2, 2.5);
+        this.health = 1;
         this.cooldown = 0;
-        this.maxCooldown = type === 'boss' ? 25 : 55;
-        this.color = type === 'boss' ? color(255, 50, 180) : color(255, 120, 120);
-        this.scoreValue = type === 'boss' ? 1500 : 120;
-        this.direction = random() > 0.5 ? 1 : -1;
-        this.phase = 0;
+        this.score = 100;
       }
-      
       show() {
         push();
         translate(this.x, this.y);
-        
-        // Enemy glow effect
-        noStroke();
-        fill(this.color.levels[0], this.color.levels[1], this.color.levels[2], 80);
-        ellipse(0, 0, this.size * 1.8, this.size * 1.8);
-        
-        // Enemy body
-        fill(this.color);
-        
-        if (this.type === 'boss') {
-          // Boss design - Touhou inspired
-          beginShape();
-          vertex(0, -this.size/1.2);
-          vertex(-this.size/1.3, this.size/3);
-          vertex(-this.size/2, this.size/1.3);
-          vertex(this.size/2, this.size/1.3);
-          vertex(this.size/1.3, this.size/3);
-          endShape(CLOSE);
-          
-          // Boss core
-          fill(255, 255, 150);
-          ellipse(0, this.size/5, this.size/2.8, this.size/2.8);
-          
-          // Core glow
-          fill(255, 255, 100, 100);
-          ellipse(0, this.size/5, this.size/2, this.size/2);
-        } else {
-          // Standard enemy - fairy design
-          ellipse(0, 0, this.size, this.size);
-          
-          // Fairy wings
-          fill(this.color.levels[0], this.color.levels[1], this.color.levels[2], 150);
-          beginShape();
-          vertex(0, -this.size/1.5);
-          vertex(-this.size/1.2, -this.size/3);
-          vertex(-this.size/2.5, this.size/1.5);
-          vertex(this.size/2.5, this.size/1.5);
-          vertex(this.size/1.2, -this.size/3);
-          endShape(CLOSE);
-        }
-        
+        imageMode(CENTER);
+        if (enemyImg) image(enemyImg, 0, 0, ENEMY_SIZE, ENEMY_SIZE);
         pop();
       }
-      
-      move() {
-        if (this.type === 'boss') {
-          // Boss movement pattern
-          this.phase += 0.02;
-          this.x = width/2 + sin(this.phase) * (width/3 - 100);
-          
-          // Move down slowly
-          if (this.y < height/3) {
-            this.y += this.speed * 0.5;
-          }
-        } else {
-          // Standard enemy movement
-          this.y += this.speed;
-          
-          // Slight horizontal drift
-          this.x += sin(frameCount * 0.03) * 1.5;
-        }
-      }
-      
+      move() { this.y += this.vy; }
       shoot() {
         if (this.cooldown <= 0) {
-          if (this.type === 'boss') {
-            // Boss spell card pattern
-            const bulletCount = 18;
-            const spread = PI * 1.8;
-            
-            for (let i = 0; i < bulletCount; i++) {
-              const angle = map(i, 0, bulletCount, -spread/2, spread/2);
-              const speed = 4;
-              
-              enemyBullets.push({
-                x: this.x + cos(angle) * 20,
-                y: this.y + sin(angle) * 20 + this.size/2,
-                speedX: cos(angle) * speed,
-                speedY: sin(angle) * speed,
-                size: BULLET_SIZE * 1.6,
-                color: color(255, 80, 150),
-                homing: frameCount % 120 < 60 // Alternate between normal and homing bullets
-              });
-            }
-          } else {
-            // Standard enemy shoots aimed bullets
-            const angle = atan2(player.y - this.y, player.x - this.x);
-            const speed = 3.5;
-            
-            enemyBullets.push({
-              x: this.x,
-              y: this.y + this.size/2,
-              speedX: cos(angle) * speed,
-              speedY: sin(angle) * speed,
-              size: BULLET_SIZE * 1.1,
-              color: color(255, 130, 130),
-              homing: false
-            });
-          }
-          this.cooldown = this.maxCooldown;
-        } else {
-          this.cooldown--;
-        }
+          const angle = atan2(player.y - this.y, player.x - this.x);
+          enemyBullets.push({
+            x: this.x,
+            y: this.y + 10,
+            vx: cos(angle) * 3,
+            vy: sin(angle) * 3,
+            size: BULLET_SIZE,
+            col: color(255, 100, 100)
+          });
+          this.cooldown = 60;
+        } else { this.cooldown--; }
       }
-      
-      takeDamage() {
-        this.health--;
-        if (this.health <= 0) {
-          createExplosion(this.x, this.y, this.color);
-          return true;
-        }
-        return false;
-      }
+      hit() { return --this.health <= 0; }
     }
-    
-    // Initialize game
+
     function setup() {
       const container = document.getElementById('sketch-container');
-      const aspectRatio = 800 / 600;
-      let canvasWidth = Math.min(container.clientWidth, 850);
-      let canvasHeight = canvasWidth / aspectRatio;
-      
-      if (canvasHeight > window.innerHeight * 0.85) {
-        canvasHeight = window.innerHeight * 0.85;
-        canvasWidth = canvasHeight * aspectRatio;
-      }
-      
-      canvas = createCanvas(canvasWidth, canvasHeight);
+      const ar = 800 / 600;
+      let w = Math.min(container.clientWidth, 800);
+      let h = w / ar;
+      if (h > window.innerHeight * 0.8) { h = window.innerHeight * 0.8; w = h * ar; }
+      canvas = createCanvas(w, h);
       canvas.parent('sketch-container');
-      
-      // Create background stars
-      backgroundStars = [];
-      for (let i = 0; i < 150; i++) {
-        backgroundStars.push(new Star());
-      }
-      
+
+      for (let i = 0; i < 120; i++) backgroundStars.push(new Star());
       resetGame();
-      
-      // Initial resize
       window.addEventListener('resize', handleResize);
     }
-    
-    // Reset game state
+
     function resetGame() {
       player = new Player();
       enemies = [];
@@ -492,415 +262,170 @@ export default {
       lives = 1;
       bombs = 3;
       activeBomb = 0;
-      lastSpawn = 0;
       gameState = 'playing';
       perfectRun = true;
-      
-      // Update live score display
-      document.getElementById('live-score').textContent = `SCORE: ${score.toString().padStart(6, '0')}`;
+      document.getElementById('live-score').textContent = 'SCORE: ' + score.toString().padStart(6, '0');
     }
-    
-    // Handle window resize
+
     function handleResize() {
       const container = document.getElementById('sketch-container');
       if (!container) return;
-      
-      const aspectRatio = 800 / 600;
-      let canvasWidth = Math.min(container.clientWidth, 850);
-      let canvasHeight = canvasWidth / aspectRatio;
-      
-      if (canvasHeight > window.innerHeight * 0.85) {
-        canvasHeight = window.innerHeight * 0.85;
-        canvasWidth = canvasHeight * aspectRatio;
-      }
-      
-      resizeCanvas(canvasWidth, canvasHeight);
-      
-      // Reposition background stars
-      backgroundStars = [];
-      for (let i = 0; i < 150; i++) {
-        backgroundStars.push(new Star());
-      }
+      const ar = 800 / 600;
+      let w = Math.min(container.clientWidth, 800);
+      let h = w / ar;
+      if (h > window.innerHeight * 0.8) { h = window.innerHeight * 0.8; w = h * ar; }
+      resizeCanvas(w, h);
     }
-    
-    // Main draw loop
+
     function draw() {
-      // Draw animated background
-      background(15, 10, 35);
-      
-      // Draw starfield
-      backgroundStars.forEach(star => {
-        star.update();
-        star.show();
-      });
-      
-      // Pulsing nebula effect
+      background(10, 5, 30);
+      backgroundStars.forEach(s => { s.update(); s.show(); });
+
+      // Nebula
       noStroke();
-      fill(100, 50, 200, 5);
-      ellipse(width/2 + sin(frameCount * 0.01) * 100, height/2 + cos(frameCount * 0.015) * 80, width * 1.2, height * 1.2);
-      
-      fill(150, 80, 255, 4);
-      ellipse(width/2 - cos(frameCount * 0.012) * 120, height/2 - sin(frameCount * 0.018) * 90, width, height);
-      
-      if (gameState === 'start') {
-        drawStartScreen();
-        return;
-      }
-      
-      if (gameState === 'gameOver') {
-        drawGameOverScreen();
-        return;
-      }
-      
-      // Active bomb effect
+      fill(80, 40, 180, 8);
+      ellipse(width/2 + sin(frameCount*0.01)*80, height/2, width*1.1, height*0.7);
+      fill(150, 60, 220, 6);
+      ellipse(width/2, height/2 + cos(frameCount*0.012)*70, width*0.8, height*1.2);
+
+      if (gameState === 'start') return drawStart();
+      if (gameState === 'gameOver') return drawGameOver();
+
       if (activeBomb > 0) {
         activeBomb--;
-        
-        // Bomb shockwave
-        noFill();
-        stroke(100, 255, 255, 200 - activeBomb * 2);
-        strokeWeight(3 - activeBomb/20);
-        ellipse(player.x, player.y, activeBomb * 1.5);
-        
-        // Slow motion effect
-        frameRate(45 - activeBomb * 0.2);
-      } else {
-        frameRate(60);
-      }
-      
-      // Game logic
+        frameRate(45);
+        noFill(); stroke(150, 255, 255, 200 - activeBomb*2);
+        strokeWeight(2); ellipse(player.x, player.y, activeBomb * 1.2);
+      } else { frameRate(60); }
+
       player.move();
-      
-      // Shooting with mouse or Z key
-      if (mouseIsPressed || keyIsDown(90)) {
-        player.shoot();
-      }
-      
-      // Bomb with X key
-      if (keyIsDown(88) && activeBomb === 0) {
-        player.useBomb();
-      }
-      
-      // Spawn enemies with increasing difficulty
-      const spawnDifficulty = min(1, frameCount / 3600); // Max difficulty after 1 minute
-      const currentSpawnInterval = SPAWN_INTERVAL * (1 - spawnDifficulty * 0.7);
-      
-      if (frameCount - lastSpawn > currentSpawnInterval) {
-        // Spawn bosses at specific score intervals
-        if (score > 0 && score % 3500 < 120 * spawnDifficulty) {
-          enemies.push(new Enemy('boss'));
-        } else {
-          // Spawn groups of enemies at higher difficulties
-          const groupSize = spawnDifficulty > 0.7 ? 3 : (spawnDifficulty > 0.4 ? 2 : 1);
-          
-          for (let i = 0; i < groupSize; i++) {
-            enemies.push(new Enemy());
-          }
-        }
+      if (mouseIsPressed || keyIsDown(90)) player.shoot();
+      if (keyIsDown(88) && activeBomb === 0) player.useBomb();
+
+      // Spawn enemies
+      if (frameCount - lastSpawn > SPAWN_INTERVAL - min(30, score/200)) {
+        enemies.push(new Enemy());
         lastSpawn = frameCount;
       }
-      
-      // Update and draw player
-      if (player.invulnerable > 0) player.invulnerable--;
+
+      // Update player
+      if (player.invuln > 0) player.invuln--;
       player.show();
-      
-      // Update and draw enemies
+
+      // Enemies
       for (let i = enemies.length - 1; i >= 0; i--) {
-        const enemy = enemies[i];
-        enemy.move();
-        enemy.show();
-        enemy.shoot();
-        
-        // Check collision with player bullets
+        const e = enemies[i];
+        e.move();
+        e.show();
+        e.shoot();
         for (let j = playerBullets.length - 1; j >= 0; j--) {
-          const bullet = playerBullets[j];
-          const d = dist(enemy.x, enemy.y, bullet.x, bullet.y);
-          if (d < enemy.size/2 + bullet.size/2) {
-            if (enemy.takeDamage()) {
-              score += enemy.scoreValue;
-              document.getElementById('live-score').textContent = `SCORE: ${score.toString().padStart(6, '0')}`;
+          const b = playerBullets[j];
+          if (dist(e.x, e.y, b.x, b.y) < ENEMY_SIZE/2 + b.size/2) {
+            if (e.hit()) {
+              score += e.score;
+              document.getElementById('live-score').textContent = 'SCORE: ' + score.toString().padStart(6, '0');
               enemies.splice(i, 1);
+              // Explosion effect
+              for (let f = 0; f < 8; f++) {
+                if (explosionImg) {
+                  particles.push({
+                    img: explosionImg,
+                    x: e.x,
+                    y: e.y,
+                    frame: f,
+                    life: 8
+                  });
+                }
+              }
             }
-            if (!bullet.piercing) {
-              playerBullets.splice(j, 1);
-            }
+            playerBullets.splice(j, 1);
             break;
           }
         }
-        
-        // Remove enemies that go off screen
-        if (enemy.y > height + enemy.size) {
-          enemies.splice(i, 1);
-        }
+        if (e.y > height + 30) enemies.splice(i, 1);
       }
-      
-      // Update and draw player bullets
+
+      // Player bullets
       for (let i = playerBullets.length - 1; i >= 0; i--) {
-        const bullet = playerBullets[i];
-        bullet.y += bullet.speed;
-        
-        // Trail effect
-        noStroke();
-        fill(bullet.color.levels[0], bullet.color.levels[1], bullet.color.levels[2], 150);
-        ellipse(bullet.x, bullet.y + 5, bullet.size * 1.5, bullet.size * 2);
-        
-        fill(bullet.color);
-        ellipse(bullet.x, bullet.y, bullet.size);
-        
-        // Screen boundaries
-        if (bullet.y < -bullet.size || bullet.x < 0 || bullet.x > width) {
-          playerBullets.splice(i, 1);
-        }
+        const b = playerBullets[i];
+        b.y += b.vy;
+        noStroke(); fill(b.col); ellipse(b.x, b.y, b.size);
+        if (b.y < -10) playerBullets.splice(i, 1);
       }
-      
-      // Update and draw enemy bullets
+
+      // Enemy bullets
       for (let i = enemyBullets.length - 1; i >= 0; i--) {
-        const bullet = enemyBullets[i];
-        
-        // Homing bullets adjust direction toward player
-        if (bullet.homing && frameCount % 5 === 0) {
-          const targetAngle = atan2(player.y - bullet.y, player.x - bullet.x);
-          const currentAngle = atan2(bullet.speedY, bullet.speedX);
-          let angleDiff = targetAngle - currentAngle;
-          
-          // Normalize angle difference
-          while (angleDiff > PI) angleDiff -= TWO_PI;
-          while (angleDiff < -PI) angleDiff += TWO_PI;
-          
-          // Adjust direction gradually
-          const turnRate = 0.08;
-          if (abs(angleDiff) > 0.01) {
-            if (angleDiff > 0) {
-              bullet.speedX = cos(currentAngle + turnRate) * 3.5;
-              bullet.speedY = sin(currentAngle + turnRate) * 3.5;
-            } else {
-              bullet.speedX = cos(currentAngle - turnRate) * 3.5;
-              bullet.speedY = sin(currentAngle - turnRate) * 3.5;
-            }
-          }
-        } else {
-          bullet.x += bullet.speedX;
-          bullet.y += bullet.speedY;
-        }
-        
-        // Bomb clears bullets
-        if (activeBomb > 0) {
-          const d = dist(player.x, player.y, bullet.x, bullet.y);
-          if (d < activeBomb * 1.2) {
-            enemyBullets.splice(i, 1);
-            continue;
-          }
-        }
-        
-        // Graze detection
-        if (player.grazed(bullet)) {
-          continue;
-        }
-        
-        // Draw bullet with glow
-        noStroke();
-        fill(bullet.color.levels[0], bullet.color.levels[1], bullet.color.levels[2], 100);
-        ellipse(bullet.x, bullet.y, bullet.size * 1.8, bullet.size * 1.8);
-        fill(bullet.color);
-        ellipse(bullet.x, bullet.y, bullet.size);
-        
-        // Check collision with player
-        const d = dist(player.x, player.y, bullet.x, bullet.y);
-        if (d < PLAYER_SIZE/2.2 + bullet.size/2 && !activeBomb) {
-          if (player.hit()) {
-            if (lives <= 0) {
-              gameState = 'gameOver';
-            }
-          }
+        const b = enemyBullets[i];
+        b.x += b.vx; b.y += b.vy;
+        if (activeBomb > 0 && dist(player.x, player.y, b.x, b.y) < activeBomb) {
           enemyBullets.splice(i, 1);
           continue;
         }
-        
-        // Screen boundaries
-        if (bullet.y > height + bullet.size || bullet.x < -bullet.size || bullet.x > width + bullet.size) {
+        if (player.grazed(b)) continue;
+        noStroke(); fill(b.col); ellipse(b.x, b.y, b.size);
+        if (dist(player.x, player.y, b.x, b.y) < PLAYER_SIZE/2 + b.size/2 && !activeBomb) {
+          if (player.hit()) if (lives <= 0) gameState = 'gameOver';
           enemyBullets.splice(i, 1);
         }
+        if (b.y > height + 10 || b.x < -10 || b.x > width + 10) enemyBullets.splice(i, 1);
       }
-      
-      // Update and draw particles
+
+      // Particles (including explosion frames)
       for (let i = particles.length - 1; i >= 0; i--) {
-        particles[i].update();
-        particles[i].show();
-        if (particles[i].isDead()) {
-          particles.splice(i, 1);
+        const p = particles[i];
+        if (p.img) {
+          // Animated explosion sprite
+          p.life--;
+          if (p.life <= 0) { particles.splice(i, 1); continue; }
+          push();
+          translate(p.x, p.y);
+          imageMode(CENTER);
+          // explosion.png: 8 frames horizontally, 32x32 each
+          const fw = 32, fh = 32;
+          image(p.img, 0, 0, fw, fh, p.frame * fw, 0, fw, fh);
+          pop();
+        } else {
+          p.update();
+          p.show();
+          if (p.dead()) particles.splice(i, 1);
         }
       }
-      
-      // Draw HUD
+
       drawHUD();
-      
-      // Game over at 0 lives
-      if (lives <= 0) {
-        gameState = 'gameOver';
-      }
+
+      if (lives <= 0) gameState = 'gameOver';
     }
-    
-    // Draw HUD elements
+
     function drawHUD() {
-      push();
-      noStroke();
-      
-      // Score
-      fill(255, 220, 100);
-      textSize(22);
-      textFont('monospace');
-      text(`SCORE: ${score.toString().padStart(6, '0')}`, 20, 30);
-      
-      // Bomb count with visual indicator
-      fill(255, 150, 255);
-      textSize(20);
-      text(`BOMB: ${bombs} ${activeBomb > 0 ? '!' : ''}`, width - 180, 30);
-      
-      // Perfect run indicator
-      if (perfectRun && frameCount % 60 < 30) {
-        fill(255, 255, 100);
-        textSize(18);
-        text('PERFECT', width/2, 30);
-      }
-      
-      // Graze counter
-      fill(150, 255, 255);
-      textSize(16);
-      text(`GRAZE: ${player.graze}`, width - 120, height - 20);
-      
-      // Lives indicator (1CC challenge)
-      fill(255, 120, 180);
-      ellipse(30, height - 30, 25, 25);
-      
-      if (lives <= 0 || !perfectRun) {
-        fill(150, 50, 100);
-        ellipse(30, height - 30, 15, 15);
-      } else {
-        fill(255, 220, 100);
-        ellipse(30, height - 30, 12, 12);
-      }
-      
-      pop();
+      fill(255, 220, 100); textSize(20); textFont('monospace');
+      text('SCORE: ' + score.toString().padStart(6, '0'), 20, 28);
+      fill(255, 180, 255); text('BOMB: ' + bombs + (activeBomb > 0 ? '!' : ''), width - 140, 28);
+      if (perfectRun && frameCount % 60 < 30) { fill(255, 255, 150); textSize(16); text('PERFECT', width/2, 28); }
+      fill(180, 255, 255); textSize(14); text('GRAZE: ' + player.graze, width - 100, height - 16);
     }
-    
-    // Draw start screen
-    function drawStartScreen() {
-      push();
+
+    function drawStart() {
       textAlign(CENTER, CENTER);
-      
-      // Title with glow
-      noStroke();
-      fill(255, 150, 255, 100);
-      textSize(56);
-      textFont('monospace');
-      text('TOUHOU LEGACY', width/2, height/2 - 110);
-      
-      fill(200, 100, 255);
-      textSize(52);
-      text('TOUHOU LEGACY', width/2, height/2 - 110);
-      
-      // Subtitle
-      fill(120, 200, 255);
-      textSize(26);
-      text('1 CREDIT CLEAR CHALLENGE', width/2, height/2 - 50);
-      
-      // Tagline
-      fill(255, 215, 100);
-      textSize(22);
-      text('Survive the bullet curtain', width/2, height/2 - 20);
-      
-      // Instructions
-      fill(200, 220, 255);
-      textSize(19);
-      text('WASD/ARROWS - Move\nZ or CLICK - Shoot\nX - Bomb (limited)\nR - Restart', width/2, height/2 + 30);
-      
-      // Start prompt with pulse
-      const pulse = sin(frameCount * 0.1) * 20 + 180;
-      fill(100, 255, 200, pulse);
-      textSize(28);
-      text('CLICK TO START', width/2, height/2 + 100);
-      
-      // Draw player preview
-      player = new Player();
-      player.x = width/2;
-      player.y = height/2 + 60;
-      player.show();
-      
-      pop();
-    }
-    
-    // Draw game over screen
-    function drawGameOverScreen() {
-      push();
-      textAlign(CENTER, CENTER);
-      
-      // Game over text with glow
-      noStroke();
-      fill(255, 100, 150, 100);
-      textSize(60);
-      textFont('monospace');
-      text('GAME OVER', width/2, height/2 - 60);
-      
-      fill(255, 80, 120);
-      textSize(56);
-      text('GAME OVER', width/2, height/2 - 60);
-      
-      // Score display
-      fill(255, 220, 100);
-      textSize(36);
-      text(`FINAL SCORE: ${score}`, width/2, height/2 + 10);
-      
-      // Perfect run badge
-      if (perfectRun) {
-        fill(255, 255, 100);
-        textSize(28);
-        text('PERFECT CLEAR!', width/2, height/2 + 50);
-      }
-      
-      // Restart prompt with pulse
+      fill(255, 150, 255); textSize(48); text('TOUHOU LEGACY', width/2, height/2 - 80);
+      fill(180, 220, 255); textSize(24); text('1 CREDIT CLEAR CHALLENGE', width/2, height/2 - 30);
+      fill(255, 220, 150); textSize(20); text('Survive the bullet curtain', width/2, height/2);
+      fill(200, 240, 255); textSize(18); text('Z/X — Shoot/Bomb • R — Restart', width/2, height/2 + 40);
       const pulse = sin(frameCount * 0.1) * 30 + 150;
-      fill(150, 220, 255, pulse);
-      textSize(24);
-      text('CLICK OR PRESS R TO RESTART', width/2, height/2 + 95);
-      
-      pop();
+      fill(120, 240, 255, pulse); textSize(26); text('CLICK TO START', width/2, height/2 + 90);
+      player = new Player(); player.x = width/2; player.y = height/2 + 60; player.show();
     }
-    
-    // Mouse events
-    function mouseClicked() {
-      if (gameState === 'start') {
-        gameState = 'playing';
-      } else if (gameState === 'gameOver') {
-        resetGame();
-      }
+
+    function drawGameOver() {
+      textAlign(CENTER, CENTER);
+      fill(255, 100, 150); textSize(56); text('GAME OVER', width/2, height/2 - 60);
+      fill(255, 220, 120); textSize(32); text('FINAL SCORE: ' + score, width/2, height/2);
+      if (perfectRun) { fill(255, 255, 150); textSize(24); text('PERFECT CLEAR!', width/2, height/2 + 40); }
+      fill(180, 230, 255); textSize(22); text('CLICK OR PRESS R TO RESTART', width/2, height/2 + 80);
     }
-    
-    // Keyboard events
-    function keyPressed() {
-      if (gameState === 'gameOver' && (key === 'r' || key === 'R')) {
-        resetGame();
-      }
-      if (gameState === 'start' && keyCode === ENTER) {
-        gameState = 'playing';
-      }
-      // Prevent scrolling with space/arrows
-      if ([32, 37, 38, 39, 40].includes(keyCode)) {
-        return false;
-      }
-    }
-    
-    // Prevent context menu on canvas
-    function touchStarted() {
-      if (gameState === 'playing') {
-        player.shoot();
-      }
-      return false;
-    }
-    
-    // Cleanup on unload
-    window.addEventListener('beforeunload', () => {
-      window.removeEventListener('resize', handleResize);
-    });
+
+    function mouseClicked() { if (gameState === 'start') gameState = 'playing'; else if (gameState === 'gameOver') resetGame(); }
+    function keyPressed() { if (gameState === 'gameOver' && (key === 'r' || key === 'R')) resetGame(); }
+    function touchStarted() { if (gameState === 'playing') player.shoot(); return false; }
   </script>
 </body>
 </html>`;
@@ -913,7 +438,7 @@ export default {
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY',
         'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-        'Content-Security-Policy': "default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' ; frame-ancestors 'none'",
+        'Content-Security-Policy': "default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://raw.githubusercontent.com 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https://raw.githubusercontent.com data:; frame-ancestors 'none'",
       }
     });
   }
