@@ -2,6 +2,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
+    // Handle CORS preflight
     if (request.method === 'OPTIONS') {
       return new Response(null, {
         headers: {
@@ -12,19 +13,18 @@ export default {
       });
     }
 
+    // Only allow GET
     if (request.method !== 'GET') {
       return new Response('Method not allowed', { status: 405 });
     }
 
-//    if (url.pathname === '/' || url.pathname === '/index.html') {
-//      return Response.redirect('https://ccity.cc', 302);
+    // ✅ SERVE GAME AT ROOT `/`, `/index.html`, and `/game` — NO REDIRECT!
+    if (url.pathname === '/' || url.pathname === '/index.html' || url.pathname === '/game') {
+      // OK — fall through to HTML response
+    } else {
+      return new Response('Not found', { status: 404 });
     }
 
-//    if (url.pathname !== '/game') {
-//      return new Response('Not found', { status: 404 });
-    }
-
-    // ✅ String.raw + no inner backticks → build-safe
     const html = String.raw`
 <!DOCTYPE html>
 <html lang="en">
@@ -35,7 +35,7 @@ export default {
   <meta name="description" content="Bullet-hell shooter inspired by Touhou Project. One-credit clear challenge!">
   <meta property="og:title" content="1cc - Touhou Legacy">
   <meta property="og:description" content="Can you survive with just one credit?">
-  <meta property="og:url" content="https://ccity.cc">
+  <meta property="og:url" content="https://1cc.ccity.cc">
   <meta property="og:type" content="game">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
   <style>
@@ -53,7 +53,7 @@ export default {
 </head>
 <body>
   <div class="header">
-    <div class="logo">ccity.cc</div>
+    <div class="logo">1cc.ccity.cc</div>
     <div class="score-display" id="live-score">SCORE: 000000</div>
   </div>
   <div class="game-container" id="sketch-container"></div>
@@ -72,7 +72,7 @@ export default {
   </div>
 
   <script>
-    // ✅ Preload fan-made sprites (CC0, from thpatch)
+    // ✅ Preload fan-made sprites (CC0, from thpatch — safe & legal)
     let playerImg, enemyImg, explosionImg;
     function preload() {
       playerImg = loadImage('https://raw.githubusercontent.com/thpatch/thcrap-tutorials/master/sprites/reimu.png');
@@ -102,7 +102,6 @@ export default {
     let activeBomb = 0;
     let perfectRun = true;
 
-    // Particle for explosions
     class Particle {
       constructor(x, y, col) {
         this.x = x;
@@ -153,7 +152,7 @@ export default {
         this.graze = 0;
       }
       show() {
-        if (this.invuln > 0 && frameCount % 6 < 3) return; // blink
+        if (this.invuln > 0 && frameCount % 6 < 3) return;
         push();
         translate(this.x, this.y);
         imageMode(CENTER);
@@ -281,7 +280,6 @@ export default {
       background(10, 5, 30);
       backgroundStars.forEach(s => { s.update(); s.show(); });
 
-      // Nebula
       noStroke();
       fill(80, 40, 180, 8);
       ellipse(width/2 + sin(frameCount*0.01)*80, height/2, width*1.1, height*0.7);
@@ -302,17 +300,14 @@ export default {
       if (mouseIsPressed || keyIsDown(90)) player.shoot();
       if (keyIsDown(88) && activeBomb === 0) player.useBomb();
 
-      // Spawn enemies
       if (frameCount - lastSpawn > SPAWN_INTERVAL - min(30, score/200)) {
         enemies.push(new Enemy());
         lastSpawn = frameCount;
       }
 
-      // Update player
       if (player.invuln > 0) player.invuln--;
       player.show();
 
-      // Enemies
       for (let i = enemies.length - 1; i >= 0; i--) {
         const e = enemies[i];
         e.move();
@@ -325,7 +320,6 @@ export default {
               score += e.score;
               document.getElementById('live-score').textContent = 'SCORE: ' + score.toString().padStart(6, '0');
               enemies.splice(i, 1);
-              // Explosion effect
               for (let f = 0; f < 8; f++) {
                 if (explosionImg) {
                   particles.push({
@@ -345,7 +339,6 @@ export default {
         if (e.y > height + 30) enemies.splice(i, 1);
       }
 
-      // Player bullets
       for (let i = playerBullets.length - 1; i >= 0; i--) {
         const b = playerBullets[i];
         b.y += b.vy;
@@ -353,7 +346,6 @@ export default {
         if (b.y < -10) playerBullets.splice(i, 1);
       }
 
-      // Enemy bullets
       for (let i = enemyBullets.length - 1; i >= 0; i--) {
         const b = enemyBullets[i];
         b.x += b.vx; b.y += b.vy;
@@ -370,17 +362,14 @@ export default {
         if (b.y > height + 10 || b.x < -10 || b.x > width + 10) enemyBullets.splice(i, 1);
       }
 
-      // Particles (including explosion frames)
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         if (p.img) {
-          // Animated explosion sprite
           p.life--;
           if (p.life <= 0) { particles.splice(i, 1); continue; }
           push();
           translate(p.x, p.y);
           imageMode(CENTER);
-          // explosion.png: 8 frames horizontally, 32x32 each
           const fw = 32, fh = 32;
           image(p.img, 0, 0, fw, fh, p.frame * fw, 0, fw, fh);
           pop();
@@ -438,6 +427,7 @@ export default {
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY',
         'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+        // ✅ Allow raw.githubusercontent.com for sprites
         'Content-Security-Policy': "default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://raw.githubusercontent.com 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https://raw.githubusercontent.com data:; frame-ancestors 'none'",
       }
     });
